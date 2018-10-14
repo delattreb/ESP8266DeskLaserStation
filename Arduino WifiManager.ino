@@ -5,7 +5,8 @@
 #include <PubSubClient.h>
 #include "var.h"
 
-char thingsboardServer[];
+char thingsboardServer[] = IP_SERVER;
+String networkname = "";
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
 String data, sensor[MAXSENSOR * 2];
@@ -48,7 +49,7 @@ void reconnect()
 			Serial.print(".");
 #endif
 			Serial.println("K");
-			client.connect(NETWORKNAME);
+			client.connect(networkname.c_str());
 			delay(ATTENPTING);
 		}
 #ifdef INFO
@@ -75,14 +76,19 @@ void setup()
 	Serial.println(ESP.getCoreVersion());
 	Serial.print("Sdk version: ");
 	Serial.println(ESP.getSdkVersion());
+	Serial.print("MAC Address: ");
+	Serial.println(WiFi.macAddress());
 #endif
 	WiFiManager wifiManager;
 	//Reset setting
 	//wifiManager.resetSettings();
 
+	//Set network name
+	networkname = WiFi.macAddress();
+
 	wifiManager.setAPStaticIPConfig(IPAddress(IPLOWA, IPLOWB, IPLOWC, IPLOWD), IPAddress(IPHIGHA, IPHIGHB, IPHIGHC, IPHIGHD), IPAddress(255, 255, 255, 0));
-	
-	if (!wifiManager.autoConnect(NETWORKNAME))
+
+	if (!wifiManager.autoConnect(networkname.c_str()))
 	{
 		Serial.println("Failed to connect");
 		delay(1000);

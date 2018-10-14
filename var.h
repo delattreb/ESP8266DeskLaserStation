@@ -6,7 +6,7 @@
 // Device selection
 #define SERIALBAUDS 9600
 
-#define NETWORKNAME "ESP GUID"
+//#define NETWORKNAME "ESP_LG2"
 #define ATTENPTING 10000
 
 #pragma region IPDEFINITION
@@ -27,4 +27,3 @@
 #define MAXSENSOR 5
 #define DB_FREQUENCY 3000
 #define IP_SERVER "mycube.dscloud.me"
-
