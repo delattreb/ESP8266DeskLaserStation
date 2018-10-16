@@ -1,15 +1,13 @@
 #include <ESP8266WiFi.h>
-#include <DNSServer.h>
-#include <ESP8266WebServer.h>
+//#include <DNSServer.h>
+//#include <ESP8266WebServer.h>
 #include <WiFiManager.h>
 #include <PubSubClient.h>
 #include "var.h"
 
-char thingsboardServer[] = IP_SERVER;
-String networkname = "";
+char nodeServer[] = IP_SERVER;
 WiFiClient wifiClient;
-PubSubClient client(wifiClient);
-String data, sensor[MAXSENSOR * 2];
+PubSubClient mqttClient(wifiClient);
 const int CHAR = 48;
 int32_t oldRSSI = 0;
 static unsigned long previousMillis = 0;
@@ -25,9 +23,7 @@ void callback(char *topic, byte *payload, unsigned int length)
 	Serial.print(topic);
 	Serial.print("] ");
 	for (int i = 0; i < length; i++)
-	{
 		Serial.print((char)payload[i]);
-	}
 	Serial.println();
 #endif
 }
@@ -38,18 +34,18 @@ void callback(char *topic, byte *payload, unsigned int length)
 void reconnect()
 {
 	// Connect to MQTT
-	if (!client.connected())
+	if (!mqttClient.connected())
 	{
 #ifdef INFO
 		Serial.println("Attempting MQTT connection...");
 #endif
-		while (!client.connected())
+		while (!mqttClient.connected())
 		{
 #ifdef INFO
 			Serial.print(".");
 #endif
 			Serial.println("K");
-			client.connect(networkname.c_str());
+			mqttClient.connect(WiFi.macAddress().c_str());
 			delay(ATTENPTING);
 		}
 #ifdef INFO
@@ -57,6 +53,7 @@ void reconnect()
 		Serial.println("Connected");
 #endif
 		Serial.println("O");
+		mqttClient.subscribe(TOPIC_TEAM);
 	}
 }
 
@@ -83,12 +80,9 @@ void setup()
 	//Reset setting
 	//wifiManager.resetSettings();
 
-	//Set network name
-	networkname = WiFi.macAddress();
-
 	wifiManager.setAPStaticIPConfig(IPAddress(IPLOWA, IPLOWB, IPLOWC, IPLOWD), IPAddress(IPHIGHA, IPHIGHB, IPHIGHC, IPHIGHD), IPAddress(255, 255, 255, 0));
 
-	if (!wifiManager.autoConnect(networkname.c_str()))
+	if (!wifiManager.autoConnect(WiFi.macAddress().c_str()))
 	{
 		Serial.println("Failed to connect");
 		delay(1000);
@@ -96,11 +90,9 @@ void setup()
 		delay(5000);
 	}
 
-	client.setServer(thingsboardServer, MQTTPORT);
-	client.setCallback(callback);
+	mqttClient.setServer(nodeServer, MQTTPORT);
+	mqttClient.setCallback(callback);
 	reconnect();
-	for (int i = 0; i < (MAXSENSOR * 2); i++)
-		sensor[i] = "";
 	oldRSSI = WiFi.RSSI();
 }
 
@@ -120,36 +112,18 @@ void loop()
 		}
 		previousMillis = currentMillis;
 	}
-	if (client.connected())
-		client.loop();
+	if (mqttClient.connected())
+		mqttClient.loop();
 	// Check if data available
 	if (Serial.available())
 	{
-		data = Serial.readString();
-		// get data
-		if (data.startsWith("T", 0))
-		{
-			sensor[int(data[1]) - CHAR - 1] = data.substring(3, data.length() - 1);
-#ifdef DEBUG
-			Serial.println(data);
-#endif
-		}
-		if (data.startsWith("H", 0))
-		{
-			sensor[int(data[1]) - CHAR] = data.substring(3, data.length() - 1);
-#ifdef DEBUG
-			Serial.println(data);
-#endif
-		}
+		//data = Serial.readString();
+		//if (data.startsWith("T", 0))
+		//	sensor[int(data[1]) - CHAR - 1] = data.substring(3, data.length() - 1);
 	}
 
 	// Transmit Data
-	if (sensor[int(data[1]) - CHAR - 1].length() > 0 && sensor[int(data[1]) - CHAR].length() > 0)
-	{
-		sendMQTT(data[1], sensor[int(data[1]) - CHAR - 1], sensor[int(data[1]) - CHAR]);
-		sensor[int(data[1]) - CHAR - 1] = "";
-		sensor[int(data[1]) - CHAR] = "";
-	}
+	//sendMQTT(data[1], sensor[int(data[1]) - CHAR - 1], sensor[int(data[1]) - CHAR]);
 }
 
 //
@@ -164,7 +138,7 @@ void sendMQTT(char sensor, String temp, String hum)
 	char attributesh[100];
 	temp.toCharArray(attributest, 100);
 	hum.toCharArray(attributesh, 100);
-	if (client.connected())
+	if (mqttClient.connected())
 	{
 #ifdef DEBUG
 		Serial.println("Before send to MQTT broker:");
@@ -176,7 +150,7 @@ void sendMQTT(char sensor, String temp, String hum)
 #endif
 		strT.concat(sensor);
 		strH.concat(sensor);
-		client.publish(strT.c_str(), attributest);
-		client.publish(strH.c_str(), attributesh);
+		mqttClient.publish(strT.c_str(), attributest);
+		mqttClient.publish(strH.c_str(), attributesh);
 	}
 }
