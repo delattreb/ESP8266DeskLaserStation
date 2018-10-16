@@ -1,19 +1,21 @@
 // VAR
 
 #pragma region DEBUG
-//#define INFO
-//#define DEBUG
+#define INFO
+#define DEBUG
 #pragma endregion
 
 #pragma region CONFIG
 #define SERIALBAUDS 9600
 #define DB_FREQUENCY 3000
 #define ATTENPTING 10000
+#define JSONBUFFER 200
 #pragma endregion
 
 #pragma region TOPICS
 #define TOPIC_TEAM "team"
 #define TOPIC_GAME "game"
+#define TOPIC_PARTY "party"
 #pragma endregion
 
 #pragma region IP

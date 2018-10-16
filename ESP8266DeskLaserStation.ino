@@ -1,31 +1,64 @@
 #include <ESP8266WiFi.h>
-//#include <DNSServer.h>
-//#include <ESP8266WebServer.h>
 #include <WiFiManager.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 #include "var.h"
 
 char nodeServer[] = IP_SERVER;
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 const int CHAR = 48;
-int32_t oldRSSI = 0;
 static unsigned long previousMillis = 0;
 unsigned long currentMillis;
 
+// 
+// Decode JSON
+// 
+void decodeJSON(char *topic, char json[], unsigned int length)
+{
+	StaticJsonBuffer<JSONBUFFER> jsonBuffer;
+	JsonObject& root = jsonBuffer.parseObject(json);
+	if (!root.success()) {
+#ifdef DEBUG
+		Serial.println("parse json failed");
+#endif
+		return;
+	}
+
+	// In other case, you can do root["time"].as<long>();
+	const char* team = root["team"];
+	const char* jacket = root["jacket"];
+#ifdef DEBUG
+	Serial.print("Team: ");
+	Serial.println(team);
+	Serial.print("Jacket: ");
+	Serial.println(jacket);
+#endif
+	//long time = root["time"];
+	//double latitude = root["data"][0];
+	//double longitude = root["data"][1];
+
+	//Check MAC Address
+}
+
 //
-// reconnect
+// callback
 //
 void callback(char *topic, byte *payload, unsigned int length)
 {
-#ifdef INFO
-	Serial.print("Message arrived [");
-	Serial.print(topic);
-	Serial.print("] ");
+#ifdef DEBUG
+	Serial.print("Topic: ");
+	Serial.println(topic);
+	Serial.print("Payload: ");
 	for (int i = 0; i < length; i++)
 		Serial.print((char)payload[i]);
-	Serial.println();
+	Serial.println("");
 #endif
+	//Decode JSON
+	char json[JSONBUFFER];
+	for (int i = 0; i < length; i++)
+		json[i] = (char)payload[i];
+	decodeJSON(topic, json, length);
 }
 
 //
@@ -44,7 +77,6 @@ void reconnect()
 #ifdef INFO
 			Serial.print(".");
 #endif
-			Serial.println("K");
 			mqttClient.connect(WiFi.macAddress().c_str());
 			delay(ATTENPTING);
 		}
@@ -52,8 +84,9 @@ void reconnect()
 		Serial.println("");
 		Serial.println("Connected");
 #endif
-		Serial.println("O");
+		mqttClient.subscribe(TOPIC_PARTY);
 		mqttClient.subscribe(TOPIC_TEAM);
+		mqttClient.subscribe(TOPIC_GAME);
 	}
 }
 
@@ -63,10 +96,8 @@ void reconnect()
 void setup()
 {
 	Serial.begin(SERIALBAUDS);
-	while (!Serial)
-	{
-		;
-	}
+	while (!Serial)  continue;
+
 #ifdef INFO
 	delay(1500);
 	Serial.print("Core version: ");
@@ -93,7 +124,6 @@ void setup()
 	mqttClient.setServer(nodeServer, MQTTPORT);
 	mqttClient.setCallback(callback);
 	reconnect();
-	oldRSSI = WiFi.RSSI();
 }
 
 //
@@ -103,15 +133,8 @@ void loop()
 {
 	currentMillis = millis();
 	reconnect();
-	if (currentMillis - previousMillis >= DB_FREQUENCY)
-	{
-		if (oldRSSI != WiFi.RSSI())
-		{
-			Serial.println("S" + String(WiFi.RSSI()));
-			oldRSSI = WiFi.RSSI();
-		}
-		previousMillis = currentMillis;
-	}
+	//if (currentMillis - previousMillis >= DB_FREQUENCY)
+	//	previousMillis = currentMillis;
 	if (mqttClient.connected())
 		mqttClient.loop();
 	// Check if data available
@@ -133,11 +156,8 @@ void sendMQTT(char sensor, String temp, String hum)
 {
 	// Send payload
 	String strT = "iot:t";
-	String strH = "iot:h";
 	char attributest[100];
-	char attributesh[100];
 	temp.toCharArray(attributest, 100);
-	hum.toCharArray(attributesh, 100);
 	if (mqttClient.connected())
 	{
 #ifdef DEBUG
@@ -146,11 +166,8 @@ void sendMQTT(char sensor, String temp, String hum)
 		Serial.println(hum);
 		Serial.println(sensor);
 		Serial.println(attributest);
-		Serial.println(attributesh);
 #endif
 		strT.concat(sensor);
-		strH.concat(sensor);
 		mqttClient.publish(strT.c_str(), attributest);
-		mqttClient.publish(strH.c_str(), attributesh);
 	}
 }
