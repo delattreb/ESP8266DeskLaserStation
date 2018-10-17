@@ -4,18 +4,16 @@
 #define _MQTT_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "arduino.h"
+#include "arduino.h"
 #else
-	#include "WProgram.h"
+#include "WProgram.h"
 #endif
 
 // Topic managment
-void decodeTopicTeam(char json[]);
+void decodeTopicTeam(char json[], String mac_adr);
 void decodeTopicParty(char json[]);
 void decodeTopicGame(char json[]);
-
-// Send MQTT
-void sendGame();
+void decodeTopicStart(char json[]);
 
 #endif
 
