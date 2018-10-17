@@ -10,12 +10,19 @@
 #define DB_FREQUENCY 3000
 #define ATTENPTING 10000
 #define JSONBUFFER 200
+#define MESSAGEBUFFER 100
+#define CMD_PREFIX "_"
+#define CMD_TEAM "T" 
+#define CMD_PARTY "P"
+#define CMD_GAME "G"
+#define CMD_KILL "K"
 #pragma endregion
 
 #pragma region TOPICS
 #define TOPIC_TEAM "team"
 #define TOPIC_GAME "game"
 #define TOPIC_PARTY "party"
+#define TOPIC_START "start"
 #pragma endregion
 
 #pragma region IP
@@ -35,4 +42,9 @@
 #pragma region MQTT
 #define MQTTPORT 1884
 #define IP_SERVER "mycube.dscloud.me"
+#pragma endregion
+
+#pragma region GPIO
+#define GPIO_0 0
+#define GPIO_1 2
 #pragma endregion

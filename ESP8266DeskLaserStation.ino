@@ -2,48 +2,17 @@
 #include <WiFiManager.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include "mqtt.h"
 #include "var.h"
 
 char nodeServer[] = IP_SERVER;
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
-const int CHAR = 48;
-static unsigned long previousMillis = 0;
-unsigned long currentMillis;
 
-// 
-// Decode JSON
-// 
-void decodeJSON(char *topic, char json[], unsigned int length)
-{
-	StaticJsonBuffer<JSONBUFFER> jsonBuffer;
-	JsonObject& root = jsonBuffer.parseObject(json);
-	if (!root.success()) {
-#ifdef DEBUG
-		Serial.println("parse json failed");
-#endif
-		return;
-	}
-
-	// In other case, you can do root["time"].as<long>();
-	const char* team = root["team"];
-	const char* jacket = root["jacket"];
-#ifdef DEBUG
-	Serial.print("Team: ");
-	Serial.println(team);
-	Serial.print("Jacket: ");
-	Serial.println(jacket);
-#endif
-	//long time = root["time"];
-	//double latitude = root["data"][0];
-	//double longitude = root["data"][1];
-
-	//Check MAC Address
-}
-
-//
+//********************************
 // callback
-//
+// Description:
+//********************************
 void callback(char *topic, byte *payload, unsigned int length)
 {
 #ifdef DEBUG
@@ -58,12 +27,20 @@ void callback(char *topic, byte *payload, unsigned int length)
 	char json[JSONBUFFER];
 	for (int i = 0; i < length; i++)
 		json[i] = (char)payload[i];
-	decodeJSON(topic, json, length);
+	if (strcmp(topic, TOPIC_TEAM) == 0)
+		decodeTopicTeam(json, WiFi.macAddress());
+	if (strcmp(topic, TOPIC_PARTY) == 0)
+		decodeTopicParty(json);
+	if (strcmp(topic, TOPIC_GAME) == 0)
+		decodeTopicGame(json);
+	if (strcmp(topic, TOPIC_START) == 0)
+		decodeTopicStart(json);
 }
 
-//
+//********************************
 // reconnect
-//
+// Description:
+//********************************
 void reconnect()
 {
 	// Connect to MQTT
@@ -75,24 +52,26 @@ void reconnect()
 		while (!mqttClient.connected())
 		{
 #ifdef INFO
-			Serial.print(".");
+			Serial.print(mqttClient.state());
 #endif
 			mqttClient.connect(WiFi.macAddress().c_str());
 			delay(ATTENPTING);
 		}
 #ifdef INFO
 		Serial.println("");
-		Serial.println("Connected");
+		Serial.println("MQTT connected");
 #endif
 		mqttClient.subscribe(TOPIC_PARTY);
 		mqttClient.subscribe(TOPIC_TEAM);
 		mqttClient.subscribe(TOPIC_GAME);
+		mqttClient.subscribe(TOPIC_START);
 	}
 }
 
-//
+//********************************
 // setup
-//
+// Description:
+//********************************
 void setup()
 {
 	Serial.begin(SERIALBAUDS);
@@ -124,50 +103,69 @@ void setup()
 	mqttClient.setServer(nodeServer, MQTTPORT);
 	mqttClient.setCallback(callback);
 	reconnect();
+
+	//ESP8266 Configuration
+	pinMode(GPIO_0, OUTPUT);
+	digitalWrite(GPIO_0, HIGH);
 }
 
-//
+//********************************
+// sendGame
+// Description:
+//********************************
+void sendGame(String id, String target)
+{
+	StaticJsonBuffer<MESSAGEBUFFER> JSONbuffer;
+	JsonObject &JSONencoder = JSONbuffer.createObject();
+
+	JSONencoder["id"] = id;
+	JSONencoder["target"] = target;
+
+	char JSONmessageBuffer[MESSAGEBUFFER];
+	JSONencoder.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+#ifdef DEBUG
+	Serial.println("Sending message to MQTT topic");
+	Serial.println(JSONmessageBuffer);
+#endif
+	if (mqttClient.publish(TOPIC_GAME, JSONmessageBuffer) == true) {
+#ifdef DEBUG
+		Serial.println("Success sending message");
+#endif
+	}
+	else {
+#ifdef DEBUG
+		Serial.println("Error sending message");
+#endif
+	}
+}
+
+//********************************
 // loop
-//
+// Description:
+//********************************
 void loop()
 {
-	currentMillis = millis();
 	reconnect();
-	//if (currentMillis - previousMillis >= DB_FREQUENCY)
-	//	previousMillis = currentMillis;
+
 	if (mqttClient.connected())
 		mqttClient.loop();
-	// Check if data available
+	// Check if data available on serial port
 	if (Serial.available())
 	{
-		//data = Serial.readString();
-		//if (data.startsWith("T", 0))
-		//	sensor[int(data[1]) - CHAR - 1] = data.substring(3, data.length() - 1);
-	}
-
-	// Transmit Data
-	//sendMQTT(data[1], sensor[int(data[1]) - CHAR - 1], sensor[int(data[1]) - CHAR]);
-}
-
-//
-// sendMQTT
-//
-void sendMQTT(char sensor, String temp, String hum)
-{
-	// Send payload
-	String strT = "iot:t";
-	char attributest[100];
-	temp.toCharArray(attributest, 100);
-	if (mqttClient.connected())
-	{
+		String data = Serial.readString();
+		if (data.startsWith(CMD_KILL, 0)) {
+			String id = data.substring(1, data.indexOf(';'));
+			Serial.println(id);
+			String target = data.substring(data.indexOf(';') + 1, data.length());
+			Serial.println(target);
 #ifdef DEBUG
-		Serial.println("Before send to MQTT broker:");
-		Serial.println(temp);
-		Serial.println(hum);
-		Serial.println(sensor);
-		Serial.println(attributest);
+			Serial.print("Id: ");
+			Serial.println(id);
+			Serial.print("Target: ");
+			Serial.println(target);
 #endif
-		strT.concat(sensor);
-		mqttClient.publish(strT.c_str(), attributest);
+			//Send to MQTT
+			sendGame(id, target);
+		}
 	}
 }

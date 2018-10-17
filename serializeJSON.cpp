@@ -12,46 +12,8 @@ const char *mqttPassword = "yourInstancePassword";
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-void setup()
-{
-
-    Serial.begin(115200);
-    Serial.println();
-
-    WiFi.begin(ssid, password);
-
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-        Serial.println("Connecting to WiFi..");
-    }
-
-    Serial.println("Connected to the WiFi network");
-
-    client.setServer(mqttServer, mqttPort);
-
-    while (!client.connected())
-    {
-        Serial.println("Connecting to MQTT...");
-
-        if (client.connect("ESP32Client", mqttUser, mqttPassword))
-        {
-
-            Serial.println("connected");
-        }
-        else
-        {
-
-            Serial.print("failed with state ");
-            Serial.print(client.state());
-            delay(2000);
-        }
-    }
-}
-
 void loop()
 {
-
     StaticJsonBuffer<300> JSONbuffer;
     JsonObject &JSONencoder = JSONbuffer.createObject();
 
@@ -69,13 +31,9 @@ void loop()
     Serial.println(JSONmessageBuffer);
 
     if (client.publish("esp/test", JSONmessageBuffer) == true)
-    {
         Serial.println("Success sending message");
-    }
     else
-    {
         Serial.println("Error sending message");
-    }
 
     client.loop();
 }
