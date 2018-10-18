@@ -106,7 +106,7 @@ void setup()
 
 	//ESP8266 Configuration
 	pinMode(GPIO_0, OUTPUT);
-	digitalWrite(GPIO_0, HIGH);
+	digitalWrite(GPIO_0, LOW);
 }
 
 //********************************

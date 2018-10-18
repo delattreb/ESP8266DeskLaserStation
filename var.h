@@ -1,16 +1,16 @@
 // VAR
 
 #pragma region DEBUG
-#define INFO
-#define DEBUG
+//#define INFO
+//#define DEBUG
 #pragma endregion
 
 #pragma region CONFIG
 #define SERIALBAUDS 9600
 #define DB_FREQUENCY 3000
 #define ATTENPTING 10000
-#define JSONBUFFER 200
-#define MESSAGEBUFFER 100
+#define JSONBUFFER 300
+#define MESSAGEBUFFER 200
 #define CMD_PREFIX "_"
 #define CMD_TEAM "T" 
 #define CMD_PARTY "P"

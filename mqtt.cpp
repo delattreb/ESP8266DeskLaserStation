@@ -129,7 +129,8 @@ void decodeTopicStart(char json[])
 #endif
 	// Update GPIO state
 	if (strcmp(go, "1") == 0)
-		digitalWrite(GPIO_0, LOW);
-	if (strcmp(go, "0") == 0)
 		digitalWrite(GPIO_0, HIGH);
+	if (strcmp(go, "0") == 0)
+		digitalWrite(GPIO_0, LOW);
 }
+
