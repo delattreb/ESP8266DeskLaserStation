@@ -8,6 +8,7 @@
 char nodeServer[] = IP_SERVER;
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
+char json[JSONBUFFER];
 
 //********************************
 // callback
@@ -24,7 +25,6 @@ void callback(char *topic, byte *payload, unsigned int length)
 	Serial.println("");
 #endif
 	//Decode JSON
-	char json[JSONBUFFER];
 	for (int i = 0; i < length; i++)
 		json[i] = (char)payload[i];
 	if (strcmp(topic, TOPIC_TEAM) == 0)
@@ -91,7 +91,7 @@ void setup()
 	//wifiManager.resetSettings();
 
 	wifiManager.setAPStaticIPConfig(IPAddress(IPLOWA, IPLOWB, IPLOWC, IPLOWD), IPAddress(IPHIGHA, IPHIGHB, IPHIGHC, IPHIGHD), IPAddress(255, 255, 255, 0));
-
+	wifiManager.setDebugOutput(false);
 	if (!wifiManager.autoConnect(WiFi.macAddress().c_str()))
 	{
 		Serial.println("Failed to connect");
@@ -106,7 +106,9 @@ void setup()
 
 	//ESP8266 Configuration
 	pinMode(GPIO_0, OUTPUT);
-	digitalWrite(GPIO_0, LOW);
+	digitalWrite(GPIO_0, HIGH);
+	pinMode(GPIO_2, INPUT);
+	digitalWrite(GPIO_2, LOW);
 }
 
 //********************************

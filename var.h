@@ -46,5 +46,5 @@
 
 #pragma region GPIO
 #define GPIO_0 0
-#define GPIO_1 2
+#define GPIO_2 2
 #pragma endregion
