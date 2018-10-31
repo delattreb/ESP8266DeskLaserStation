@@ -46,13 +46,14 @@ void reconnect()
 	// Connect to MQTT
 	if (!mqttClient.connected())
 	{
+		sendMQTTConnection("KO");
 #ifdef INFO
 		Serial.println("Attempting MQTT connection...");
 #endif
 		while (!mqttClient.connected())
 		{
 #ifdef INFO
-			Serial.print(mqttClient.state());
+			Serial.print(".");
 #endif
 			mqttClient.connect(WiFi.macAddress().c_str());
 			delay(ATTENPTING);
@@ -61,6 +62,7 @@ void reconnect()
 		Serial.println("");
 		Serial.println("MQTT connected");
 #endif
+		sendMQTTConnection("OK");
 		mqttClient.subscribe(TOPIC_PARTY);
 		mqttClient.subscribe(TOPIC_TEAM);
 		mqttClient.subscribe(TOPIC_GAME);
@@ -76,7 +78,7 @@ void setup()
 {
 	Serial.begin(SERIALBAUDS);
 	while (!Serial)  continue;
-
+	sendWiFiConnection("KO");
 #ifdef INFO
 	delay(1500);
 	Serial.print("Core version: ");
@@ -91,15 +93,21 @@ void setup()
 	//wifiManager.resetSettings();
 
 	wifiManager.setAPStaticIPConfig(IPAddress(IPLOWA, IPLOWB, IPLOWC, IPLOWD), IPAddress(IPHIGHA, IPHIGHB, IPHIGHC, IPHIGHD), IPAddress(255, 255, 255, 0));
+#ifdef WIFIDEBUG
+	wifiManager.setDebugOutput(true);
+#else
 	wifiManager.setDebugOutput(false);
+#endif
 	if (!wifiManager.autoConnect(WiFi.macAddress().c_str()))
 	{
+#ifdef DEBUG
 		Serial.println("Failed to connect");
+#endif
 		delay(1000);
 		ESP.reset();
 		delay(5000);
 	}
-
+	sendWiFiConnection("OK");
 	mqttClient.setServer(nodeServer, MQTTPORT);
 	mqttClient.setCallback(callback);
 	reconnect();

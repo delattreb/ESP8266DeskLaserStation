@@ -3,19 +3,22 @@
 #pragma region DEBUG
 //#define INFO
 //#define DEBUG
+//#define WIFIDEBUG
 #pragma endregion
 
 #pragma region CONFIG
-#define SERIALBAUDS 9600
+#define SERIALBAUDS 19200
 #define DB_FREQUENCY 3000
 #define ATTENPTING 10000
 #define JSONBUFFER 300
 #define MESSAGEBUFFER 200
-#define CMD_PREFIX "_"
 #define CMD_TEAM "T" 
 #define CMD_PARTY "P"
 #define CMD_GAME "G"
 #define CMD_KILL "K"
+#define CMD_PSEUDO "N"
+#define CMD_WIFI_CONNECT "W"
+#define CMD_MQTT_CONNECT "M"
 #pragma endregion
 
 #pragma region TOPICS
