@@ -6,3 +6,6 @@ void decodeTopicParty(char json[]);
 void decodeTopicGame(char json[]);
 void decodeTopicStart(char json[]);
 
+void sendWiFiConnection(String wificonnection);
+void sendMQTTConnection(String mqttconnection);
+
