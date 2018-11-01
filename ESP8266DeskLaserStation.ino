@@ -55,7 +55,7 @@ void reconnect()
 #ifdef INFO
 			Serial.print(".");
 #endif
-			mqttClient.connect(WiFi.macAddress().c_str());
+			mqttClient.connect(WiFi.macAddress().c_str(), MQTT_USER, MQTT_PWD);
 			delay(ATTENPTING);
 		}
 #ifdef INFO

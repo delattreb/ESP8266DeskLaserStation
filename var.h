@@ -8,8 +8,8 @@
 
 #pragma region CONFIG
 #define SERIALBAUDS 19200
-#define DB_FREQUENCY 3000
-#define ATTENPTING 10000
+#define DB_FREQUENCY 2000
+#define ATTENPTING 3000
 #define JSONBUFFER 300
 #define MESSAGEBUFFER 200
 #define CMD_TEAM "T" 
@@ -45,6 +45,9 @@
 #pragma region MQTT
 #define MQTTPORT 1884
 #define IP_SERVER "mycube.dscloud.me"
+
+#define MQTT_USER "dietpi"
+#define MQTT_PWD "infected"
 #pragma endregion
 
 #pragma region GPIO
